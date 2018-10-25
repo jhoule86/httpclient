@@ -8,18 +8,13 @@ package org.jhoule.ws.client.http;
 
 import org.jhoule.ws.client.ClientException;
 import org.jhoule.ws.client.RemoteResource;
-import org.jhoule.ws.client.URLResource;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.Set;
 
 /**
@@ -120,6 +115,9 @@ public class NativeHTTPClient extends HTTPClientImpl {
             m = METHOD.GET;
         }
 
+        InputStream err = null;
+        InputStream inbound = null;
+
         try {
 
             if (aHeaders != null)
@@ -135,21 +133,27 @@ public class NativeHTTPClient extends HTTPClientImpl {
 
             byte[] request = aRequestPayload;
             if (request != null) {
-                mConnection.setDoOutput(true);
+                OutputStream outbound = null;
+                try {
+                    mConnection.setDoOutput(true);
 
-                OutputStream outbound = mConnection.getOutputStream();
-                outbound.write(request);
-                outbound.flush();
+                    outbound = mConnection.getOutputStream();
+                    outbound.write(request);
+                    outbound.flush();
+                }
+                finally
+                {
+                    if (outbound != null)
+                    {
+                        outbound.close();
+                    }
+                }
             }
 
-
-
-            InputStream err = null;
-            InputStream inbound = null;
             try
             {
                 err = mConnection.getErrorStream();
-                //inbound = mConnection.getInputStream();
+                inbound = mConnection.getInputStream();
             }
             catch (Exception e)
             {
@@ -194,7 +198,22 @@ public class NativeHTTPClient extends HTTPClientImpl {
         } catch (Throwable t)
         {
             t.printStackTrace();
-//            throw new ClientException(t);
+        }
+        finally
+        {
+            try {
+                if (inbound != null) {
+                    inbound.close();
+                }
+
+                if (err != null) {
+                    err.close();
+                }
+            }
+            catch (IOException e)
+            {
+                System.err.println(e.toString());
+            }
         }
 
         return res;
