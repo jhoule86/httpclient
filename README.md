@@ -1,3 +1,3 @@
-# httpclient
+# wsclient
 
-http client used for TV remote project
+webservices clients used for TV remote project
