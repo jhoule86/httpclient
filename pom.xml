@@ -9,5 +9,6 @@
  </properties>
  <build>
     <sourceDirectory>${basedir}/src</sourceDirectory>
+    <testSourceDirectory>${basedir}/test</testSourceDirectory>
 </build>
 </project>
